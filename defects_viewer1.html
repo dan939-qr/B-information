@@ -4,19 +4,9 @@
   <meta charset="UTF-8" />
   <title>제품 불량 정보 조회</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
-    img.logo {
-      height: 40px;
-      margin-bottom: 20px;
-    }
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 30px; }
+    img.logo { height: 40px; margin-bottom: 20px; }
+    table { margin: 20px auto; border-collapse: collapse; }
     td {
       width: 50px;
       height: 50px;
@@ -24,33 +14,18 @@
       font-weight: bold;
       vertical-align: middle;
     }
-    .defect {
-      background-color: red;
-      color: white;
-    }
-    .info {
-      margin-top: 30px;
-      font-size: 16px;
-    }
-    .info span {
-      display: block;
-      margin: 4px 0;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-      margin-top: 20px;
-    }
+    .defect { background-color: red; color: white; }
+    .info { margin-top: 30px; font-size: 16px; }
+    .info span { display: block; margin: 4px 0; }
+    .error { color: red; font-weight: bold; margin-top: 20px; }
   </style>
 </head>
 <body>
 
-  <!-- 상단 로고 -->
   <img src="hyundai_logo.png" alt="현대 L&C 로고" class="logo" />
   <h2>제품 불량 위치 및 정보</h2>
   <p>시리얼번호: <span id="snDisplay">-</span></p>
   <table id="defectTable"></table>
-
   <div class="info" id="productInfo"></div>
   <div class="error" id="errorMsg"></div>
 
@@ -73,9 +48,15 @@
         const thickness = sn.slice(11, 13);
         const pattern = sn.slice(13, 15);
         const defectType = sn.slice(15, 17);
+        const defectCodeRaw = sn.slice(17);
+        const defectMask = parseInt(defectCodeRaw);
 
-        // 🔧 수정된 부분: 시리얼번호 끝 숫자만 정확히 추출
-        const defectMask = parseInt(sn.match(/\d+$/)[0]);
+        console.log("defectMask:", defectMask); // 콘솔 확인용
+
+        if (isNaN(defectMask)) {
+          errorBox.textContent = "⚠ 불량 위치 코드가 잘못되었습니다.";
+          throw new Error("defectMask is NaN");
+        }
 
         let idx = 0;
         for (let row = 0; row < 3; row++) {
