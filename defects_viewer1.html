@@ -2,78 +2,109 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Defect Viewer</title>
+  <title>제품 불량 정보 조회</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    table { margin: auto; border-collapse: collapse; }
-    td {
-      width: 50px; height: 50px;
-      border: 1px solid #000;
+    body {
+      font-family: Arial, sans-serif;
       text-align: center;
-      vertical-align: middle;
-      font-weight: bold;
+      padding: 30px;
     }
-    .defect { background-color: red; color: white; }
-    .info { margin-top: 30px; font-size: 16px; }
-    .info span { display: block; margin: 5px 0; }
+    img.logo {
+      height: 40px;
+      margin-bottom: 20px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    td {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #000;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    .defect {
+      background-color: red;
+      color: white;
+    }
+    .info {
+      margin-top: 30px;
+      font-size: 16px;
+    }
+    .info span {
+      display: block;
+      margin: 4px 0;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <img src="hyundai_logo.png" alt="Hyundai L&C 로고" style="height: 50px; margin-bottom: 20px;" />
 
+  <!-- 상단 로고 -->
+  <img src="hyundai_logo.png" alt="현대 L&C 로고" class="logo" />
   <h2>제품 불량 위치 및 정보</h2>
   <p>시리얼번호: <span id="snDisplay">-</span></p>
-  ...
+  <table id="defectTable"></table>
 
-  <div class="info">
-    <h3>제품 정보</h3>
-    <span id="code"></span>
-    <span id="date"></span>
-    <span id="thickness"></span>
-    <span id="pattern"></span>
-    <span id="defectType"></span>
-  </div>
+  <div class="info" id="productInfo"></div>
+  <div class="error" id="errorMsg"></div>
 
   <script>
-    const labels = [..."ABCDEFGHIJKLMNOPQR"];
-    const table = document.getElementById("defectTable");
     const params = new URLSearchParams(window.location.search);
     const sn = params.get("sn");
+    const labels = [..."ABCDEFGHIJKLMNOPQR"];
+    const table = document.getElementById("defectTable");
+    const infoBox = document.getElementById("productInfo");
+    const errorBox = document.getElementById("errorMsg");
 
+    document.getElementById("snDisplay").textContent = sn || "(없음)";
+
+    // 유효성 검사
     if (!sn || sn.length < 23) {
-      document.getElementById("snDisplay").textContent = "잘못된 시리얼번호";
+      errorBox.textContent = "⚠ 유효하지 않은 시리얼번호입니다.";
     } else {
-      document.getElementById("snDisplay").textContent = sn;
+      try {
+        // 시리얼 파싱
+        const productCode = sn.slice(0, 5);
+        const date = sn.slice(5, 11);
+        const thickness = sn.slice(11, 13);
+        const pattern = sn.slice(13, 15);
+        const defectType = sn.slice(15, 17);
+        const defectMask = parseInt(sn.slice(17, 23));
 
-      // 시리얼 분해
-      const productCode = sn.slice(0, 5);      // BA201
-      const date = sn.slice(5, 11);            // 240406
-      const thickness = sn.slice(11, 13);      // 30
-      const patternGrade = sn.slice(13, 15);   // S1
-      const defectType = sn.slice(15, 17);     // 09
-      const defectMask = parseInt(sn.slice(17)); // 131081
-
-      // 표 생성
-      let idx = 0;
-      for (let row = 0; row < 3; row++) {
-        const tr = document.createElement("tr");
-        for (let col = 0; col < 6; col++) {
-          const td = document.createElement("td");
-          const label = labels[idx];
-          td.textContent = label;
-          if (defectMask & (1 << idx)) td.classList.add("defect");
-          tr.appendChild(td);
-          idx++;
+        // 표 생성
+        let idx = 0;
+        for (let row = 0; row < 3; row++) {
+          const tr = document.createElement("tr");
+          for (let col = 0; col < 6; col++) {
+            const td = document.createElement("td");
+            const label = labels[idx];
+            td.textContent = label;
+            if ((defectMask & (1 << idx)) !== 0) td.classList.add("defect");
+            tr.appendChild(td);
+            idx++;
+          }
+          table.appendChild(tr);
         }
-        table.appendChild(tr);
-      }
 
-      // 제품 정보 표시
-      document.getElementById("code").textContent = `제품코드: ${productCode}`;
-      document.getElementById("date").textContent = `생산일자: ${date.slice(0,2)}-${date.slice(2,4)}-${date.slice(4,6)}`;
-      document.getElementById("thickness").textContent = `두께: ${thickness}mm`;
-      document.getElementById("pattern").textContent = `패턴/등급: ${patternGrade}`;
-      document.getElementById("defectType").textContent = `불량유형코드: ${defectType}`;
+        // 제품 정보 표시
+        infoBox.innerHTML = `
+          <h3>제품 정보</h3>
+          <span>제품코드: ${productCode}</span>
+          <span>생산일자: 20${date.slice(0, 2)}-${date.slice(2, 4)}-${date.slice(4, 6)}</span>
+          <span>두께: ${thickness}mm</span>
+          <span>패턴/등급: ${pattern}</span>
+          <span>불량유형코드: ${defectType}</span>
+        `;
+      } catch (err) {
+        errorBox.textContent = "⚠ 시리얼 정보 해석 중 오류가 발생했습니다.";
+        console.error(err);
+      }
     }
   </script>
 </body>
