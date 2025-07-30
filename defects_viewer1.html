@@ -64,20 +64,19 @@
 
     document.getElementById("snDisplay").textContent = sn || "(없음)";
 
-    // 유효성 검사
     if (!sn || sn.length < 23) {
       errorBox.textContent = "⚠ 유효하지 않은 시리얼번호입니다.";
     } else {
       try {
-        // 시리얼 파싱
         const productCode = sn.slice(0, 5);
         const date = sn.slice(5, 11);
         const thickness = sn.slice(11, 13);
         const pattern = sn.slice(13, 15);
         const defectType = sn.slice(15, 17);
-        const defectMask = parseInt(sn.slice(17, 23));
 
-        // 표 생성
+        // 🔧 수정된 부분: 시리얼번호 끝 숫자만 정확히 추출
+        const defectMask = parseInt(sn.match(/\d+$/)[0]);
+
         let idx = 0;
         for (let row = 0; row < 3; row++) {
           const tr = document.createElement("tr");
@@ -92,7 +91,6 @@
           table.appendChild(tr);
         }
 
-        // 제품 정보 표시
         infoBox.innerHTML = `
           <h3>제품 정보</h3>
           <span>제품코드: ${productCode}</span>
