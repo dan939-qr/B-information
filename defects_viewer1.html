@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Defect Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    table { margin: auto; border-collapse: collapse; }
+    td {
+      width: 50px; height: 50px;
+      border: 1px solid #000;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: bold;
+    }
+    .defect { background-color: red; color: white; }
+    .info { margin-top: 30px; font-size: 16px; }
+    .info span { display: block; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h2>제품 불량 위치 및 정보</h2>
+  <p>시리얼번호: <span id="snDisplay">-</span></p>
+  <table id="defectTable"></table>
+
+  <div class="info">
+    <h3>제품 정보</h3>
+    <span id="code"></span>
+    <span id="date"></span>
+    <span id="thickness"></span>
+    <span id="pattern"></span>
+    <span id="defectType"></span>
+  </div>
+
+  <script>
+    const labels = [..."ABCDEFGHIJKLMNOPQR"];
+    const table = document.getElementById("defectTable");
+    const params = new URLSearchParams(window.location.search);
+    const sn = params.get("sn");
+
+    if (!sn || sn.length < 23) {
+      document.getElementById("snDisplay").textContent = "잘못된 시리얼번호";
+    } else {
+      document.getElementById("snDisplay").textContent = sn;
+
+      // 시리얼 분해
+      const productCode = sn.slice(0, 5);      // BA201
+      const date = sn.slice(5, 11);            // 240406
+      const thickness = sn.slice(11, 13);      // 30
+      const patternGrade = sn.slice(13, 15);   // S1
+      const defectType = sn.slice(15, 17);     // 09
+      const defectMask = parseInt(sn.slice(17)); // 131081
+
+      // 표 생성
+      let idx = 0;
+      for (let row = 0; row < 3; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < 6; col++) {
+          const td = document.createElement("td");
+          const label = labels[idx];
+          td.textContent = label;
+          if (defectMask & (1 << idx)) td.classList.add("defect");
+          tr.appendChild(td);
+          idx++;
+        }
+        table.appendChild(tr);
+      }
+
+      // 제품 정보 표시
+      document.getElementById("code").textContent = `제품코드: ${productCode}`;
+      document.getElementById("date").textContent = `생산일자: ${date.slice(0,2)}-${date.slice(2,4)}-${date.slice(4,6)}`;
+      document.getElementById("thickness").textContent = `두께: ${thickness}mm`;
+      document.getElementById("pattern").textContent = `패턴/등급: ${patternGrade}`;
+      document.getElementById("defectType").textContent = `불량유형코드: ${defectType}`;
+    }
+  </script>
+</body>
+</html>
